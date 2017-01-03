@@ -35,3 +35,5 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+
+previousNames.json # we include this as a .zip - it is too big to be committed
