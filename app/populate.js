@@ -6,21 +6,11 @@ const moment = require('moment');
 module.exports = function populate(config) {
     const db = getDB(config);
 
-    console.log('Creating DB');
-    fs.readFileAsync('./app/dbCreate.sql', 'utf8')
-        .then((sql) => {
-            return db.none(sql);
-        })
+    console.log('Creating database');
+    runSqlFile(db, './app/dbCreate.sql')
         .then(() => {
-            console.log('Creating DB functions');
-
-            return fs.readFileAsync('./app/dbFunctions.sql', 'utf8')
-                .then((sql) => {
-                    return db.none(sql);
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
+            console.log('Creating database functions');
+            runSqlFile(db, './app/dbFunctions.sql')
         })
         .then(() => {
             console.log('Read data from previousNames.json');
@@ -95,3 +85,13 @@ module.exports = function populate(config) {
             process.exit();
         });
 };
+
+function runSqlFile(db, filename) {
+    return fs.readFileAsync(filename, 'utf8')
+        .then((sql) => {
+            return db.none(sql);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+}
