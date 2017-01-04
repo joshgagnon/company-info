@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION nzbn_at_date(text, timestamp with time zone)
 
 
 
--- functio 3: get companyName at a specific date for a given companyName and date
+-- function 3: get companyName at a specific date for a given companyName and date
 CREATE OR REPLACE FUNCTION company_name_at_date(commanyName text, inDate timestamp with time zone , outDate timestamp with time zone)
     RETURNS text
     AS $$

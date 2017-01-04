@@ -1,4 +1,3 @@
-
 var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
 var getDB = require('./db').getDB;
@@ -14,6 +13,8 @@ module.exports = function populate(config) {
 
     fs.readFileAsync('./previousNames.json', 'utf8')
         .then((jsonString) => {
+            console.log('Read data from previousNames.json');
+
             const companies = JSON.parse(jsonString);
 
             companies.map((company) => {
@@ -30,12 +31,6 @@ module.exports = function populate(config) {
 
                 let currentNameStartDate = company.incorporationDate;
 
-                companyNames.map((name) => {
-                    if (name.endDate > currentNameStartDate) {
-                        currentNameStartDate = name.endDate;
-                    }
-                });
-
                 companyNames.push({
                     nzbn: company.nzbn,
                     companyName: company.companyName,
@@ -46,12 +41,12 @@ module.exports = function populate(config) {
                 companiesHistory = companiesHistory.concat(companyNames);
             });
         }).then(() => {
-            console.log('Starting data entry');
+            console.log('Inserting data into database');
 
             function source(index, data, delay) {
                 const companyData = companiesHistory[index];
                 
-                // If companyData is undefined, return it - the db sequence function will take this as a signal to stop
+                // If companyData is undefined, return it - the DB sequence function will take this as a signal to stop
                 if (companyData === undefined) {
                     return companyData;
                 }
@@ -69,7 +64,7 @@ module.exports = function populate(config) {
                 return this.sequence(source);
             })
             .then(function (data) {
-                console.log('Data entry done :)');
+                console.log('Data entry done');
             })
             .catch(function (error) {
                 console.log(error);
@@ -107,8 +102,4 @@ function formatDateForDB(date) {
     return date.getFullYear()
            + '-' + twoDigits(1 + date.getMonth())
            + '-' + twoDigits(date.getDate());
-}
-
-function insertCompanyName(db, companyData) {
-    
 }

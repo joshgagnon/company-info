@@ -38,3 +38,6 @@ jspm_packages
 
 # we include this as a .zip - it is too big to be committed
 previousNames.json
+
+# Mac
+.DS_Store
