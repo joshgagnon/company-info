@@ -9,7 +9,8 @@ module.exports = function populate(config) {
     // Build the DB
     runSqlFile(db, './app/dbCreate.sql'); // Run the DB create sql
     runSqlFile(db, './app/dbFunctions.sql'); // Populate functions
-        
+
+    let companiesHistory = [];
 
     fs.readFileAsync('./previousNames.json', 'utf8')
         .then((jsonString) => {
@@ -22,8 +23,8 @@ module.exports = function populate(config) {
                     companyNames.push({
                         nzbn: company.nzbn,
                         companyName: coalesceData.name,
-                        startDate: formatDateForDB(coalesceData.startDate),
-                        endDate: formatDateForDB(coalesceData.endDate)
+                        startDate: coalesceData.startDate,
+                        endDate: coalesceData.endDate
                     });
                 });
 
@@ -42,18 +43,42 @@ module.exports = function populate(config) {
                     endDate: null
                 })
 
-                companyNames.map(name => insertCompanyName(db, name));
+                companiesHistory = companiesHistory.concat(companyNames);
             });
-
-            return true;
         }).then(() => {
-            console.log('done');
+            console.log('Starting data entry');
+
+            function source(index, data, delay) {
+                const companyData = companiesHistory[index];
+                
+                // If companyData is undefined, return it - the db sequence function will take this as a signal to stop
+                if (companyData === undefined) {
+                    return companyData;
+                }
+
+                // Return a promise to insert the company at this index
+                return db.none("INSERT INTO company_names(nzbn, companyName, startDate, endDate) VALUES(${nzbn}, ${companyName}, ${startDate}, ${endDate})", {
+                        nzbn: companyData.nzbn,
+                        companyName: companyData.companyName,
+                        startDate: formatDateForDB(companyData.startDate),
+                        endDate: formatDateForDB(companyData.endDate)
+                    });
+            }
+
+            return db.tx(function (t) {
+                return this.sequence(source);
+            })
+            .then(function (data) {
+                console.log('Data entry done :)');
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
         }).catch((error) => {
             console.log(error);
+        }).then(() => {
+            process.exit();
         });
-
-    // now populate functions
-    return true;
 };
 
 function runSqlFile(db, filename) {
@@ -85,11 +110,5 @@ function formatDateForDB(date) {
 }
 
 function insertCompanyName(db, companyData) {
-    db.none("INSERT INTO company_names(nzbn, companyName, startDate, endDate) VALUES(${nzbn}, ${companyName}, ${startDate}, ${endDate})", {
-        nzbn: companyData.nzbn,
-        companyName: companyData.companyName,
-        startDate: companyData.startDate,
-        endDate: companyData.endDate
-    })
-    .catch((error) => console.log(error));
+    
 }
