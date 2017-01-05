@@ -9,38 +9,40 @@ DROP FUNCTION IF EXISTS company_name_at_date(text, timestamp with time zone, tim
 CREATE OR REPLACE FUNCTION company_from_nzbn_at_date(text, timestamp with time zone)
     RETURNS text
     AS $$
-        SELECT companyName FROM company_names
+        SELECT company_name FROM company_names
         WHERE nzbn = $1
-            AND startDate <= $2
-            AND (endDate IS NULL OR endDate >= $2)
-        ORDER BY startDate DESC
+            AND start_date <= $2
+            AND (end_date IS NULL OR end_date >= $2)
+        ORDER BY start_date DESC
     $$ LANGUAGE SQL;
 
 
--- function 2: get nzbn for companyName at a specific date
+-- function 2: get nzbn for company name at a specific date
 CREATE OR REPLACE FUNCTION nzbn_at_date(text, timestamp with time zone)
     RETURNS text
     AS $$
         SELECT nzbn FROM company_names
-        WHERE companyName = $1
-            AND startDate <= $2
-            AND (endDate IS NULL OR endDate >= $2)
-        ORDER BY startDate DESC
+        WHERE company_name = $1
+            AND start_date <= $2
+            AND (end_date IS NULL OR end_date >= $2)
+        ORDER BY start_date DESC
     $$ LANGUAGE SQL;
 
 
 
--- function 3: get companyName at a specific date for a given companyName and date
+-- function 3: get company_name at a specific date for a given company name and date
 CREATE OR REPLACE FUNCTION company_name_at_date(commanyName text, inDate timestamp with time zone , outDate timestamp with time zone)
     RETURNS text
     AS $$
-        SELECT companyName from company_names
+        SELECT company_name from company_names
         WHERE nzbn = (
                 SELECT nzbn FROM company_names
-                WHERE companyName = $1
-                    AND startDate <= $2
-                    AND (endDate IS NULL OR endDate >= $2)
+                WHERE company_name = $1
+                    AND start_date <= $2
+                    AND (end_date IS NULL OR end_date >= $2)
+                ORDER BY start_date DESC
                 )
-            AND startDate <= $3
-            AND (endDate IS NULL OR endDate >= $3)
+            AND start_date <= $3
+            AND (end_date IS NULL OR end_date >= $3)
+            ORDER BY start_date DESC
     $$ LANGUAGE SQL;

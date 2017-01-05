@@ -1,5 +1,6 @@
 var Promise = require("bluebird");
 var fs = Promise.promisifyAll(require("fs"));
+const pgp = require('pg-promise')();
 var getDB = require('./db').getDB;
 const moment = require('moment');
 
@@ -19,60 +20,33 @@ module.exports = function populate(config) {
 
             return fs.readFileAsync('./previousNames.json', 'utf8')
                 .then((jsonString) => {
-                    const companies = JSON.parse(jsonString);
+                    const companiesJson = JSON.parse(jsonString);
 
-                    companies.map((company) => {
+                    companiesJson.map((company) => {
                         let companyNames = [];
                         
-                        company.coalesce.map((coalesceData) => {
-                            companyNames.push({
-                                nzbn: company.nzbn,
-                                companyName: coalesceData.name,
-                                startDate: coalesceData.startDate,
-                                endDate: coalesceData.endDate
-                            });
-                        });
+                        company.coalesce.map((data) => companyNames.push(new NameChange(company.nzbn, company.companyNumber, data.name, data.startDate, data.endDate)));
 
                         let currentNameStartDate = company.incorporationDate;
 
-                        companyNames.push({
-                            nzbn: company.nzbn,
-                            companyName: company.companyName,
-                            startDate: currentNameStartDate,
-                            endDate: null
-                        })
+                        companyNames.map((name) => {
+                            currentNameStartDate = name.end_date > currentNameStartDate ? name.end_date : currentNameStartDate;
+                        });
+
+                        companyNames.push(new NameChange(company.nzbn, company.companyNumber, company.companyName, currentNameStartDate));
 
                         companiesHistory = companiesHistory.concat(companyNames);
                     });
                 }).then(() => {
                     console.log('Inserting data into database');
 
-                    function source(index, data, delay) {
-                        const companyData = companiesHistory[index];
-                        
-                        // If companyData is undefined, return it - the DB sequence function will take this as a signal to stop
-                        if (companyData === undefined) {
-                            return companyData;
-                        }
+                    const insertHelper = new pgp.helpers.ColumnSet(['nzbn', 'company_number', 'company_name', 'start_date', 'end_date'], {table: 'company_names'});
 
-                        // Return a promise to insert the company at this index
-                        return db.none("INSERT INTO company_names(nzbn, companyName, startDate, endDate) VALUES(${nzbn}, ${companyName}, ${startDate}, ${endDate})", {
-                                nzbn: companyData.nzbn,
-                                companyName: companyData.companyName,
-                                startDate: moment(companyData.startDate, 'DD MMMM YYYY').format('YYYY-MM-DD'),
-                                endDate: companyData.endDate ? moment(companyData.endDate, 'DD MMMM YYYY').format('YYYY-MM-DD') : null
-                            });
-                    }
-
-                    return db.tx(function (t) {
-                        return this.sequence(source);
-                    })
-                    .then(function (data) {
-                        console.log('Data entry done');
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
+                    const query = pgp.helpers.insert(companiesHistory, insertHelper);
+                    return db.none(query)
+                        .catch((error) => {
+                            console.log(error);
+                        });
                 })
                 .catch((error) => {
                     console.log(error);
@@ -94,4 +68,12 @@ function runSqlFile(db, filename) {
         .catch((error) => {
             console.log(error);
         });
+}
+
+function NameChange(nzbn, companyNumber, name, startDate, endDate=null) {
+    this.nzbn = nzbn;
+    this.company_number = companyNumber;
+    this.company_name = name;
+    this.start_date = startDate;
+    this.end_date = endDate;
 }
