@@ -12,17 +12,11 @@ module.exports = function(config) {
 
     app.post('/', function (request, response) {
         let companyNames = request.body;
-        let jsonResponse = {};
 
-        Promise.all(companyNames.map((name) => {
-                return companyNameHistory(name.name, name.date).then((result) => {
-                    if (result != null) {
-                        jsonResponse[name.name] = result;
-                    }
-                });
-            }))
-            .then(() => {
-                response.json(jsonResponse);
+        Promise.all(companyNames.map((name) => companyNameHistory(name.name, name.date)))
+            .then((result) => {
+                const filtered = result.filter((item) => item != null);
+                response.json(filtered);
             });
     });
 
@@ -48,11 +42,11 @@ module.exports = function(config) {
                 result.map((item) => {
                     let newItem = {
                         name: item.name,
-                        startDate: item.start_date
+                        startDate: moment(item.start_date).format('DD MMM YYYY')
                     };
 
                     if (item.end_date) {
-                        newItem.endDate = item.end_date;
+                        newItem.endDate = moment(item.end_date).format('DD MMM YYYY');
                     }
 
                     data.history.push(newItem);
