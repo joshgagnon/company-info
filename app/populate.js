@@ -30,7 +30,7 @@ module.exports = function populate(config) {
                         let currentNameStartDate = company.incorporationDate;
 
                         companyNames.map((name) => {
-                            currentNameStartDate = name.end_date > currentNameStartDate ? name.end_date : currentNameStartDate;
+                            currentNameStartDate = moment(name.end_date, 'DD MMMM YYYY').isAfter(moment(currentNameStartDate, 'DD MMMM YYYY')) ? name.end_date : currentNameStartDate;
                         });
 
                         companyNames.push(new NameChange(company.nzbn, company.companyNumber, company.companyName, currentNameStartDate));
