@@ -1,5 +1,5 @@
 import chai from 'chai';
-chai.should();
+const should = chai.should();
 const getDB = require('../../app/db').getDB;
 const moment = require('moment');
 
@@ -66,29 +66,47 @@ describe('DB Functions', function() {
                         nzbn: '9429000001748',
                         company_number: '204724',
                         company_name: 'MONDELEZ NEW ZEALAND',
+                        start_date: '01 Jul 2013',
+                        end_date: null
                     },{
                         nzbn: '9429000001748',
                         company_number: '204724',
                         company_name: 'CADBURY',
+                        start_date: '05 Jan 2011',
+                        end_date: '01 Jul 2013'
                     },{
                         nzbn: '9429000001748',
                         company_number: '204724',
                         company_name: 'CADBURY LIMITED',
+                        start_date: '01 Apr 2009',
+                        end_date: '05 Jan 2011'
                     },{
                         nzbn: '9429000001748',
                         company_number: '204724',
                         company_name: 'CADBURY CONFECTIONERY LIMITED',
+                        start_date: '07 Sep 1990',
+                        end_date: '01 Apr 2009'
                     },{
                         nzbn: '9429000001748',
                         company_number: '204724',
                         company_name: 'R. HUDSON LIMITED',
+                        start_date: '05 Oct 1983',
+                        end_date: '07 Sep 1990'
                     }];
 
 
-                    actualStates.map(function(state, index) {
-                        state.nzbn.should.equal(expectedStates[index].nzbn);
-                        state.company_number.should.equal(expectedStates[index].company_number);
-                        state.company_name.should.equal(expectedStates[index].company_name);
+                    actualStates.map(function(actualState, index) {
+                        const expectedState = expectedStates[index];
+                        actualState.nzbn.should.equal(expectedState.nzbn);
+                        actualState.company_number.should.equal(expectedState.company_number);
+                        actualState.company_name.should.equal(expectedState.company_name);
+                        moment(actualState.start_date).isSame(moment(expectedState.start_date, 'DD MMM YYYY')).should.be.true;
+
+                        if (expectedState.end_date === null) {
+                            should.equal(null, actualState.end_date);
+                        } else {
+                            moment(actualState.end_date).isSame(moment(expectedState.end_date, 'DD MMM YYYY')).should.be.true;
+                        }
                     });
                 });
         });
