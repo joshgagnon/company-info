@@ -3,5 +3,5 @@
     "host": "dbhost",
     "user": "dbuser",
     "password": "dbpass",
-    "port": 5670
+    "server_port": 5670
 }
