@@ -41,3 +41,6 @@ previousNames.json
 
 # Mac
 .DS_Store
+
+# config file
+config.json

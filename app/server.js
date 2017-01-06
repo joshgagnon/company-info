@@ -7,7 +7,7 @@ var app = express();
 app.use(bodyParser.json());
 
 module.exports = function(config) {
-    const port = 3000;
+    const port = config.port || 3000;
     let db = getDB(config);
 
     app.post('/', function (request, response) {
