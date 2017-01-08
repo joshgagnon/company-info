@@ -13,11 +13,17 @@ module.exports = function(config) {
     app.post('/', function (request, response) {
         let companyNames = request.body;
 
-        Promise.all(companyNames.map((name) => companyNameHistory(name.name, name.date)))
-            .then((result) => {
-                const filtered = result.filter((item) => item != null);
-                response.json(filtered);
-            });
+        console.log(companyNames);
+
+        if (!Array.isArray(companyNames)) {
+            response.send('Error. Route requires a JSON array of company names')
+        } else {
+            Promise.all(companyNames.map((name) => companyNameHistory(name.name, name.date)))
+                .then((result) => {
+                    const filtered = result.filter((item) => item != null);
+                    response.json(filtered);
+                });
+        }
     });
 
     app.listen(port, function () {
