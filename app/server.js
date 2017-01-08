@@ -13,8 +13,6 @@ module.exports = function(config) {
     app.post('/', function (request, response) {
         let companyNames = request.body;
 
-        console.log(companyNames);
-
         if (!Array.isArray(companyNames)) {
             response.send('Error. Route requires a JSON array of company names')
         } else {
