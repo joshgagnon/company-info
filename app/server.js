@@ -40,12 +40,13 @@ module.exports = function(config) {
                 let data = {
                     nzbn: result[0].nzbn,
                     companyNumber: result[0].company_number,
+                    queryName: name,
                     history: []
                 };
 
                 result.map((item) => {
                     let newItem = {
-                        name: item.name,
+                        name: item.company_name,
                         startDate: moment(item.start_date).format('DD MMM YYYY')
                     };
 
