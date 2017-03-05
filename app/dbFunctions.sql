@@ -57,3 +57,16 @@ CREATE OR REPLACE FUNCTION company_name_history(text, timestamp with time zone)
             )
         ORDER BY start_date DESC
     $$ LANGUAGE SQL;
+
+
+
+CREATE OR REPLACE FUNCTION nzbns(text[])
+    RETURNS JSON
+    AS $$
+        SELECT array_to_json(array_agg(row_to_json(q)))
+        FROM (
+        SELECT nzbn, company_name, company_number FROM company_names
+        WHERE nzbn = ANY($1)
+        and end_date is null
+        ) q ;
+    $$ LANGUAGE SQL;
