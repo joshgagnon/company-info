@@ -53,7 +53,7 @@ module.exports = function(config) {
             response.send('Error. Route requires a JSON array of NZBNs')
         } else {
             nzbnLookup(nzbns)
-                .then(results => response.json(results))
+                .then(results => response.json(results[0].nzbns))
                 .catch(e =>  response.send('Error. ' + e))
 
         }
